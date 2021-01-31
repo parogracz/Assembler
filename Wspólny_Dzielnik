@@ -1,0 +1,366 @@
+;======Program pobiera 2 liczby (max 8bitowe - 255int).
+;======Po pobraniu wypisuje ich wspólne dzielniki.
+;======Program obsługuje 0, po wykonaniu możemy ponowić operację bądź wyjść (ESC).
+;======Wszelkie litery będą złośliwymi, nieobsługiwanymi danymi.
+;======Nie ponoszę odpowiedzialności za utratę wzroku bądź szaleństwo powstałe w wyniku analizowania rejestrów 16 bitowych. Pozdro.
+	org 100h
+start:
+	MOV AX,3
+	INT	10h	;======= Czyszcze ekran
+	CALL	clear
+	CALL	enter
+	MOV	AH,9	;======= Tekst
+	MOV	DX,tekst1
+	INT	21h
+	CALL	clear
+;========================================================================= A
+	PUSH '$' ;=======Oznaczam poczatek stosu
+pet1:
+	CALL pobor
+	CMP	AL,48 ;=======Sprawdzam czy podana jest liczba
+	JB	out1
+	CMP	AL,57
+	JA	out1
+	JMP pet1
+out1:
+
+	MOV	CL,1 ;========Mnożniki
+	MOV	CH,10
+	POP AX	;=======Wyrzucam zbedny znak 
+pet2:
+	POP AX ;=======Zdejmuje
+	CMP AL,36
+	JE	out2
+	
+	SUB	AL,48 ;====== Odejmuje wartosc zera
+	MUL	CL	;========= Mnoznik, bedzie rosl x10 co obrot
+	ADD	[a],AL
+	MOV	AL,CL
+	MUL	CH	;=========	CL x 10
+	MOV	CL,AL
+	JMP pet2
+out2:
+
+;========================================================================= tekst
+	CALL	clear
+	CALL	enter
+	MOV	AH,9
+	MOV	DX,tekst2
+	INT	21h
+
+;========================================================================= B
+	CALL	clear
+	PUSH '$' ;=======Oznaczam poczatek stosu
+pet3:
+	CALL pobor
+	CMP	AL,48 ;=======Sprawdzam czy podana jest liczba
+	JB	out3
+	CMP	AL,57
+	JA	out3
+	JMP pet3
+out3:
+
+	MOV	CL,1 ;========Mnożniki
+	MOV	CH,10
+	POP AX	;=======Wyrzucam zbedny znak 
+pet4:
+	POP AX ;=======Zdejmuje
+	CMP AL,36
+	JE	out4
+	
+	SUB	AL,48 ;====== Odejmuje wartosc zera
+	MUL	CL	;========= Mnoznik, bedzie rosl x10 co obrot
+	ADD	[b],AL
+	MOV	AL,CL
+	MUL	CH	;=========	CL x 10
+	MOV	CL,AL
+	JMP pet4
+out4:
+;========================================================================= Dzielnik
+	CALL	clear
+pet5:
+	INC	CL
+
+	MOV	AX,[a]
+	DIV	CL
+	CMP	AH,0
+	JNE	nwyp
+	
+	MOV	AX,[b]
+	DIV	CL
+	CMP	AH,0
+	JNE nwyp
+						;======== Wypisz
+	CALL	enter
+	XOR	AX,AX
+	MOV	CH,10
+	PUSH	'$'
+	CALL	wypis
+	
+	CMP	CL,255
+	JE	qwe
+						;-=======
+nwyp:
+	MOV	BL,[a]
+	CMP	BL,[b]
+	JA	out5
+	MOV	BH,[b]
+	MOV	[a],BH
+	MOV	[b],BL
+out5:
+	CMP	CL,[a]
+	JNE	pet5
+qwe:
+;========================================================================= Powtorz
+	
+	CALL	enter
+	MOV	AH,9
+	MOV	DX,tekst3
+	INT 21h
+	
+	MOV	AH,1
+	INT 21h
+	
+	CMP	AL,27
+	JE	end
+;======================================================================== Czyszczenie 
+	MOV	AX,0
+	MOV	[a],AX
+	MOV	[b],AX
+	CALL	clear
+	JMP	start
+end:	
+	MOV	ax, 4C00h
+	INT	21h
+;======================== Zmienne
+a dw 0
+b dw 0
+tekst1 DD 'P','i','e','r','w','s','z','a',':','$'
+tekst2 DD 'D','r','u','g','a',':','$'
+tekst3 DD 'E','S','C',' ','b','y',' ','w','y','j','s','c','$'
+;======================== Procedury
+clear:
+	XOR	AX,AX
+	XOR BX,BX
+	XOR CX,CX
+	XOR DX,DX
+ret
+enter:
+	MOV	AH,2
+	
+	MOV	DL,10
+	INT 21h
+	
+	MOV	DL,13
+	INT	21h
+ret
+pobor:
+	POP	BX
+	MOV	AH,1
+	INT	21h
+	PUSH AX
+	PUSH BX
+ret
+wypis:
+	MOV	AL,CL
+	POP	BX
+	pet6:
+		DIV	CH
+		MOV	DH,AL
+		MOV	AL,AH
+		MOV	AH,0
+		PUSH	AX
+		MOV	AL,DH
+		CMP	AL,0
+		JNE	pet6
+	MOV	AH,2
+	pet7:
+		POP	DX
+		CMP	DX,36
+		JE	out6
+		ADD	DL,48
+		INT 21h
+		JMP pet7
+	out6:
+	PUSH	BX
+ret  org 100h
+start:
+	MOV AX,3
+	INT	10h	;======= Czyszcze ekran
+	CALL	clear
+	CALL	enter
+	MOV	AH,9	;======= Tekst
+	MOV	DX,tekst1
+	INT	21h
+	CALL	clear
+;========================================================================= A
+	PUSH '$' ;=======Oznaczam poczatek stosu
+pet1:
+	CALL pobor
+	CMP	AL,48 ;=======Sprawdzam czy podana jest liczba
+	JB	out1
+	CMP	AL,57
+	JA	out1
+	JMP pet1
+out1:
+
+	MOV	CL,1 ;========Mnożniki
+	MOV	CH,10
+	POP AX	;=======Wyrzucam zbedny znak 
+pet2:
+	POP AX ;=======Zdejmuje
+	CMP AL,36
+	JE	out2
+	
+	SUB	AL,48 ;====== Odejmuje wartosc zera
+	MUL	CL	;========= Mnoznik, bedzie rosl x10 co obrot
+	ADD	[a],AL
+	MOV	AL,CL
+	MUL	CH	;=========	CL x 10
+	MOV	CL,AL
+	JMP pet2
+out2:
+
+;========================================================================= tekst
+	CALL	clear
+	CALL	enter
+	MOV	AH,9
+	MOV	DX,tekst2
+	INT	21h
+
+;========================================================================= B
+	CALL	clear
+	PUSH '$' ;=======Oznaczam poczatek stosu
+pet3:
+	CALL pobor
+	CMP	AL,48 ;=======Sprawdzam czy podana jest liczba
+	JB	out3
+	CMP	AL,57
+	JA	out3
+	JMP pet3
+out3:
+
+	MOV	CL,1 ;========Mnożniki
+	MOV	CH,10
+	POP AX	;=======Wyrzucam zbedny znak 
+pet4:
+	POP AX ;=======Zdejmuje
+	CMP AL,36
+	JE	out4
+	
+	SUB	AL,48 ;====== Odejmuje wartosc zera
+	MUL	CL	;========= Mnoznik, bedzie rosl x10 co obrot
+	ADD	[b],AL
+	MOV	AL,CL
+	MUL	CH	;=========	CL x 10
+	MOV	CL,AL
+	JMP pet4
+out4:
+;========================================================================= Dzielnik
+	CALL	clear
+pet5:
+	INC	CL
+
+	MOV	AX,[a]
+	DIV	CL
+	CMP	AH,0
+	JNE	nwyp
+	
+	MOV	AX,[b]
+	DIV	CL
+	CMP	AH,0
+	JNE nwyp
+						;======== Wypisz
+	CALL	enter
+	XOR	AX,AX
+	MOV	CH,10
+	PUSH	'$'
+	CALL	wypis
+	
+	CMP	CL,255
+	JE	qwe
+						;-=======
+nwyp:
+	MOV	BL,[a]
+	CMP	BL,[b]
+	JA	out5
+	MOV	BH,[b]
+	MOV	[a],BH
+	MOV	[b],BL
+out5:
+	CMP	CL,[a]
+	JNE	pet5
+qwe:
+;========================================================================= Powtorz
+	
+	CALL	enter
+	MOV	AH,9
+	MOV	DX,tekst3
+	INT 21h
+	
+	MOV	AH,1
+	INT 21h
+	
+	CMP	AL,27
+	JE	end
+;======================================================================== Czyszczenie 
+	MOV	AX,0
+	MOV	[a],AX
+	MOV	[b],AX
+	CALL	clear
+	JMP	start
+end:	
+	MOV	ax, 4C00h
+	INT	21h
+;======================== Zmienne
+a dw 0
+b dw 0
+tekst1 DD 'P','i','e','r','w','s','z','a',':','$'
+tekst2 DD 'D','r','u','g','a',':','$'
+tekst3 DD 'E','S','C',' ','b','y',' ','w','y','j','s','c','$'
+;======================== Procedury
+clear:
+	XOR	AX,AX
+	XOR BX,BX
+	XOR CX,CX
+	XOR DX,DX
+ret
+enter:
+	MOV	AH,2
+	
+	MOV	DL,10
+	INT 21h
+	
+	MOV	DL,13
+	INT	21h
+ret
+pobor:
+	POP	BX
+	MOV	AH,1
+	INT	21h
+	PUSH AX
+	PUSH BX
+ret
+wypis:
+	MOV	AL,CL
+	POP	BX
+	pet6:
+		DIV	CH
+		MOV	DH,AL
+		MOV	AL,AH
+		MOV	AH,0
+		PUSH	AX
+		MOV	AL,DH
+		CMP	AL,0
+		JNE	pet6
+	MOV	AH,2
+	pet7:
+		POP	DX
+		CMP	DX,36
+		JE	out6
+		ADD	DL,48
+		INT 21h
+		JMP pet7
+	out6:
+	PUSH	BX
+ret
